@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121110">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tracker">
+<title>Tracker</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main id="view" tabindex="-1"></main>
+
+<nav class="tabbar" aria-label="Sections">
+  <button data-tab="food" aria-label="Food">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16a8 8 0 0 1-16 0Z"/><path d="M9.5 4.5v3.5M14 3.5V8"/></svg>
+    <span>Food</span>
+  </button>
+  <button data-tab="run" aria-label="Run">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7"/><path d="M12 13.5V9.5M10 3.5h4"/></svg>
+    <span>Run</span>
+  </button>
+  <button data-tab="train" aria-label="Train">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5v5M6.5 7v10M17.5 7v10M21 9.5v5M6.5 12h11"/></svg>
+    <span>Train</span>
+  </button>
+  <button data-tab="settings" aria-label="Settings">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h9M19 7.5h1M4 16.5h1M11 16.5h9"/><circle cx="16" cy="7.5" r="2.5"/><circle cx="8" cy="16.5" r="2.5"/></svg>
+    <span>Settings</span>
+  </button>
+</nav>
+
+<div class="scrim" id="scrim" hidden></div>
+<section class="sheet" id="sheet" role="dialog" aria-modal="true" hidden></section>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
