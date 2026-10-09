@@ -52,7 +52,10 @@ export function render() {
       </div>`).join('')}
   </section>
 
-  <button class="btn primary wide" data-action="add">Add food</button>
+  <div class="addrow">
+    <button class="btn primary" data-action="add">Add food</button>
+    <button class="btn" data-action="paste">Paste JSON</button>
+  </div>
 
   <section>
     <h2>Logged</h2>
@@ -147,6 +150,7 @@ export function handle(action, el) {
   else if (action === 'next') day = addDays(day, 1);
   else if (action === 'today') day = today();
   else if (action === 'add') return foodSheet();
+  else if (action === 'paste') return pasteSheet();
   else if (action === 'edit') return foodSheet(state.foods.find((f) => f.id === el.dataset.id));
   refresh();
 }
@@ -246,6 +250,99 @@ function foodSheet(entry) {
       state.foods.splice(idx, 1);
       save(); closeSheet(); refresh();
       toast(`Deleted ${entry.name}`, () => { state.foods.splice(idx, 0, entry); save(); refresh(); });
+    };
+  });
+}
+
+// The prompt to give Claude along with a food photo; its reply pastes straight in.
+const CLAUDE_PROMPT = `Estimate the nutrition of the food in this photo. Reply with only a JSON array in a code block, no other text. Use one object per distinct food item with exactly these keys: "name" (short string), "kcal" (number), "protein", "carbs", "fat" (numbers, in grams). Example:
+[{"name": "Oats with milk", "kcal": 420, "protein": 18, "carbs": 60, "fat": 9}]`;
+
+// Accepts one object or an array, with or without a code fence or text around it.
+export function parseFoods(text) {
+  const start = text.search(/[[{]/);
+  const end = Math.max(text.lastIndexOf(']'), text.lastIndexOf('}'));
+  if (start < 0 || end < start) return { items: [], error: 'No JSON found yet.' };
+  let raw;
+  try {
+    raw = JSON.parse(text.slice(start, end + 1));
+  } catch {
+    return { items: [], error: 'That is not valid JSON.' };
+  }
+  if (raw && !Array.isArray(raw)) raw = raw.foods || raw.items || [raw];
+  if (!Array.isArray(raw)) return { items: [], error: 'Expected a list of foods.' };
+
+  const pick = (o, ...keys) => {
+    for (const k of keys) if (o[k] != null && num(o[k]) != null) return Math.max(0, num(o[k]));
+    return 0;
+  };
+  const items = [];
+  for (const o of raw) {
+    if (!o || typeof o !== 'object') continue;
+    const protein = pick(o, 'protein', 'protein_g');
+    const carbs = pick(o, 'carbs', 'carbs_g', 'carbohydrates');
+    const fat = pick(o, 'fat', 'fat_g');
+    const kcal = Math.round(pick(o, 'kcal', 'calories', 'kcals') || protein * 4 + carbs * 4 + fat * 9);
+    if (!kcal) continue;
+    items.push({ name: String(o.name ?? o.food ?? '').trim() || 'Food', kcal, protein, carbs, fat });
+  }
+  return items.length ? { items } : { items, error: 'No foods with calories found.' };
+}
+
+function pasteSheet() {
+  openSheet(`
+    <h2>Paste food JSON</h2>
+    <p class="lead">Send Claude a photo with the prompt below, then paste its reply here.</p>
+    <button type="button" class="btn wide" id="copy-prompt">Copy prompt for Claude</button>
+    <form id="paste-form">
+      <label class="field">
+        <span>JSON</span>
+        <textarea name="json" rows="6" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"
+          placeholder='[{"name": "Oats with milk", "kcal": 420, "protein": 18, "carbs": 60, "fat": 9}]'></textarea>
+      </label>
+      <div id="paste-preview"></div>
+      <div class="actions">
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="submit" class="btn primary" id="paste-go" disabled>Add</button>
+      </div>
+    </form>`, (el) => {
+    const form = el.querySelector('#paste-form');
+    const preview = el.querySelector('#paste-preview');
+    const go = el.querySelector('#paste-go');
+    let items = [];
+
+    const update = () => {
+      const text = form.json.value.trim();
+      const res = text ? parseFoods(text) : { items: [] };
+      items = res.items;
+      go.disabled = !items.length;
+      go.textContent = items.length ? `Add ${items.length} to ${relDay(day).toLowerCase()}` : 'Add';
+      preview.innerHTML = items.length
+        ? `<ul class="list compact">${items.map((f) => `
+            <li><div class="item">
+              <div><b>${esc(f.name)}</b><span>P ${fmt(f.protein)} · C ${fmt(f.carbs)} · F ${fmt(f.fat)}</span></div>
+              <em>${fmt(f.kcal)}</em>
+            </div></li>`).join('')}</ul>`
+        : (res.error ? `<p class="hint">${esc(res.error)}</p>` : '');
+    };
+    form.oninput = update;
+
+    el.querySelector('#copy-prompt').onclick = () => {
+      (navigator.clipboard?.writeText(CLAUDE_PROMPT) ?? Promise.reject())
+        .then(() => toast('Prompt copied'))
+        .catch(() => toast('Could not copy here'));
+    };
+
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      if (!items.length) return;
+      const added = items.map((f) => ({ id: uid(), date: day, ...f }));
+      state.foods.push(...added);
+      save(); closeSheet(); refresh();
+      toast(`${added.length} ${added.length === 1 ? 'food' : 'foods'} added`, () => {
+        state.foods = state.foods.filter((f) => !added.includes(f));
+        save(); refresh();
+      });
     };
   });
 }
