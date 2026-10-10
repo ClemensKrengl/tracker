@@ -132,7 +132,7 @@ function weekSection() {
       items: days.map((d, i) => ({
         label: weekdayLetter(d),
         tip: `${fmtDay(d)} · ${fmt(totals[i])} kcal`,
-        segments: [{ value: totals[i], color: s.kcalGoal && totals[i] > s.kcalGoal * 1.1 ? 'var(--over)' : 'var(--accent)' }],
+        segments: [{ value: totals[i], color: s.kcalGoal && totals[i] >= s.kcalGoal ? 'var(--reached)' : 'var(--accent)' }],
       })),
       goal: s.kcalGoal, goalLabel: s.kcalGoal ? `Goal ${fmt(s.kcalGoal)}` : '',
       readout: 'Tap a bar for the day’s total',

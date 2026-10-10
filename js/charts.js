@@ -7,10 +7,10 @@ export function ring(value, goal, size = 124) {
   const r = (size - sw) / 2;
   const c = 2 * Math.PI * r;
   const frac = goal > 0 ? Math.min(value / goal, 1) : 0;
-  const over = goal > 0 && value > goal;
+  const reached = goal > 0 && value >= goal;
   return `<svg class="ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
     <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--track)" stroke-width="${sw}"/>
-    ${frac > 0 ? `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(${over ? '--reached' : '--accent'})"
+    ${frac > 0 ? `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(${reached ? '--reached' : '--accent'})"
       stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${c * frac} ${c}"
       transform="rotate(-90 ${size / 2} ${size / 2})"/>` : ''}
   </svg>`;
@@ -18,7 +18,8 @@ export function ring(value, goal, size = 124) {
 
 export function meter(value, goal) {
   const frac = goal > 0 ? Math.min(value / goal, 1) : 0;
-  return `<div class="meter"><i style="width:${(frac * 100).toFixed(1)}%"></i></div>`;
+  const reached = goal > 0 && value >= goal;
+  return `<div class="meter${reached ? ' reached' : ''}"><i style="width:${(frac * 100).toFixed(1)}%"></i></div>`;
 }
 
 // items: [{ label, tip, segments: [{ value, color }] }]. Tapping a bar writes its tip to the readout.
