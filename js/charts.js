@@ -10,7 +10,7 @@ export function ring(value, goal, size = 124) {
   const over = goal > 0 && value > goal;
   return `<svg class="ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
     <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--track)" stroke-width="${sw}"/>
-    ${frac > 0 ? `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(${over ? '--over' : '--accent'})"
+    ${frac > 0 ? `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(${over ? '--reached' : '--accent'})"
       stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${c * frac} ${c}"
       transform="rotate(-90 ${size / 2} ${size / 2})"/>` : ''}
   </svg>`;
